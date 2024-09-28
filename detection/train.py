@@ -37,10 +37,10 @@ else:
     DEVICE = torch.device("cpu")
 
 NUM_CLASSES = 20
-BATCH_SIZE = 16
+BATCH_SIZE = 1
 IMAGE_SHAPE = (224, 224)
-NUM_WORKERS = 12
-DATASET_PATH = "../data"
+NUM_WORKERS = 1
+DATASET_PATH = "../../VOCtrainval_06-Nov-2007"
 
 @dataclass
 class HyperParameters:
@@ -72,7 +72,7 @@ def create_dataset_and_dataloaders(subset=False):
     # `pin_memory` speeds up CPU-GPU batch transfer, `num_workers=NUM_WORKERS` loads data
     # on the main CPU process, suitable for Colab.
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=BATCH_SIZE, pin_memory=True, num_workers=NUM_WORKERS
+        train_dataset, batch_size=BATCH_SIZE, pin_memory=False, num_workers=NUM_WORKERS
     )
 
     # Use batch_size = 1 during inference - during inference we do not center crop
@@ -87,6 +87,8 @@ def create_dataset_and_dataloaders(subset=False):
 def train_model(detector, train_loader, hyperparams, overfit=False):
     device = hyperparams.device
     detector = detector.to(device)
+
+    print("training!")
 
     train_detector(
         detector,

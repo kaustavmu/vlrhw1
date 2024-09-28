@@ -187,6 +187,7 @@ def train_detector(
     overfit=False,
     device: str = "cpu",
 ):
+    
     """
     Train the detector. We use SGD with momentum and step decay.
     """
@@ -213,14 +214,17 @@ def train_detector(
     detector.train()
 
     for _iter in range(max_iters):
+        print(_iter)
         # Ignore first arg (image path) during training.
         _, images, gt_boxes = next(train_loader)
-
+        print("one")
         images = images.to(device)
         gt_boxes = gt_boxes.to(device)
+        print("two")
 
         # Dictionary of loss scalars.
-        losses = detector(images, gt_boxes)
+        losses = detector.forward(images, gt_boxes)
+        print("three")
 
         # Ignore keys like "proposals" in RPN.
         losses = {k: v for k, v in losses.items() if "loss" in k}

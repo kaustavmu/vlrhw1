@@ -14,10 +14,11 @@ class ResNet(nn.Module):
         super().__init__()
 
         self.resnet = torchvision.models.resnet18(weights='IMAGENET1K_V1')
+        
         ##################################################################
         # TODO: Define a FC layer here to process the features
         ##################################################################
-        pass
+        self.fc = nn.Sequential(nn.Linear(1000, 20), nn.Softmax(dim=1))
         ##################################################################
         #                          END OF YOUR CODE                      #
         ##################################################################
@@ -27,7 +28,10 @@ class ResNet(nn.Module):
         ##################################################################
         # TODO: Return raw outputs here
         ##################################################################
-        pass
+        x = self.resnet(x)
+        out = self.fc(x)
+
+        return out
         ##################################################################
         #                          END OF YOUR CODE                      #
         ##################################################################
@@ -45,16 +49,16 @@ if __name__ == "__main__":
     # You should experiment and choose the correct hyperparameters
     # You should get a map of around 50 in 50 epochs
     ##################################################################
-    # args = ARGS(
-    #     epochs=50,
-    #     inp_size=64,
-    #     use_cuda=True,
-    #     val_every=70
-    #     lr=# TODO,
-    #     batch_size=#TODO,
-    #     step_size=#TODO,
-    #     gamma=#TODO
-    # )
+    args = ARGS(
+        epochs=10,
+        inp_size=64,
+        use_cuda=True,
+        val_every=70,
+        lr=0.005,
+        batch_size=1,
+        step_size=1,
+        gamma=1
+    )
     ##################################################################
     #                          END OF YOUR CODE                      #
     ##################################################################

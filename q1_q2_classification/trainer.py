@@ -53,7 +53,13 @@ def train(args, model, optimizer, scheduler=None, model_name='model'):
             # Function Outputs:
             #   - `output`: Computed loss, a single floating point number
             ##################################################################
-            loss = 0
+
+            # Implementing cross-entropy loss.
+
+            def cross_entropy(output, target, wgt):
+                return -torch.sum(target*torch.log(torch.clip(output*wgt, 1e-12, 1-(1e-12))))/len(output)
+
+            loss = cross_entropy(output, target, wgt)
             ##################################################################
             #                          END OF YOUR CODE                      #
             ##################################################################
@@ -67,7 +73,7 @@ def train(args, model, optimizer, scheduler=None, model_name='model'):
                 # Log gradients
                 for tag, value in model.named_parameters():
                     if value.grad is not None:
-                        writer.add_histogram(tag + "/grad", value.grad.cpu().numpy(), cnt)
+                        writer.add_histogram(tag + "/grad", value.grad.cpu().numpy().astype(np.float64), cnt)
 
             optimizer.step()
             

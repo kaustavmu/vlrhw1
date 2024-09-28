@@ -20,17 +20,24 @@ class VOCDataset(Dataset):
     for i in range(len(CLASS_NAMES)):
         INV_CLASS[CLASS_NAMES[i]] = i
 
-    def __init__(self, split, size, data_dir='data/VOCdevkit/VOC2007/'):
+    def __init__(self, split, size):
         super().__init__()
         self.split = split
-        self.data_dir = data_dir
+        self.data_dir = '../../VOC' + self.split + '_06-Nov-2007/VOCdevkit/VOC2007'
         self.size = size
-        self.img_dir = os.path.join(data_dir, 'JPEGImages')
-        self.ann_dir = os.path.join(data_dir, 'Annotations')
+        self.img_dir = os.path.join(self.data_dir, 'JPEGImages')
+        self.ann_dir = os.path.join(self.data_dir, 'Annotations')
 
-        split_file = os.path.join(data_dir, 'ImageSets/Main', split + '.txt')
+        split_file = os.path.join(self.data_dir, 'ImageSets/Main', split + '.txt')
         with open(split_file) as fp:
             self.index_list = [line.strip() for line in fp]
+
+        CLASS_NAMES = ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car',
+                   'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike',
+                   'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
+        self.INV_CLASS = {}
+        for i in range(len(CLASS_NAMES)):
+            self.INV_CLASS[CLASS_NAMES[i]] = i
 
         self.anno_list = self.preload_anno()
 
@@ -47,6 +54,8 @@ class VOCDataset(Dataset):
 
 
     def preload_anno(self):
+        #classes = ["person", "bird", "cat", "cow", "dog", "horse", "sheep", "aeroplane", "bicycle", "boat", "bus", "car", "motorbike", "train", "bottle", "chair", "diningtable", "pottedplant", "sofa", "tvmonitor"]
+        #class_dict = {classes[i]: i for i in range(len(classes))}
         """
         :return: a list of labels. each element is in the form of [class, weight],
          where both class and weight are a numpy array in shape of [20],
@@ -54,16 +63,8 @@ class VOCDataset(Dataset):
         label_list = []
         for index in self.index_list:
             fpath = os.path.join(self.ann_dir, index + '.xml')
+            print(fpath)
             tree = ET.parse(fpath)
-            
-            #######################################################################
-            # TODO: Insert your code here to preload labels
-            # Hint: the folder Annotations contains .xml files with class labels
-            # for objects in the image. The `tree` variable contains the .xml
-            # information in an easy-to-access format (it might be useful to read
-            # https://docs.python.org/3/library/xml.etree.elementtree.html)
-            # Loop through the `tree` to find all objects in the image
-            #######################################################################
 
             #  The class vector should be a 20-dimensional vector with class[i] = 1 if an object of class i is present in the image and 0 otherwise
             class_vec = torch.zeros(20)
@@ -71,6 +72,14 @@ class VOCDataset(Dataset):
             # The weight vector should be a 20-dimensional vector with weight[i] = 0 iff an object of class i has the `difficult` attribute set to 1 in the XML file and 1 otherwise
             # The difficult attribute specifies whether a class is ambiguous and by setting its weight to zero it does not contribute to the loss during training 
             weight_vec = torch.ones(20)
+
+            root = tree.getroot()
+
+            for child in root:
+                if child.tag == 'object':
+                    class_vec[self.INV_CLASS[child[0].text]] = 1
+                    if child[3].text == "1":
+                        weight_vec[self.INV_CLASS[child[0].text]] = 1
 
             ######################################################################
             #                            END OF YOUR CODE                        #
@@ -92,7 +101,9 @@ class VOCDataset(Dataset):
         # change and you will have to write the correct value of `flat_dim`
         # in line 46 in simple_cnn.py
         ######################################################################
-        pass
+
+        return [transforms.CenterCrop(64), transforms.RandomRotation(45), transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip(), transforms.ColorJitter(0.2, 0.2, 0.2, 0.1)]
+
         ######################################################################
         #                            END OF YOUR CODE                        #
         ######################################################################

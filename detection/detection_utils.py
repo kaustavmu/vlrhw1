@@ -139,13 +139,20 @@ def fcos_get_deltas_from_locations(
     ##########################################################################
     # Set this to Tensor of shape (N, 4) giving deltas (left, top, right, bottom)
     # from the locations to GT box edges, normalized by FPN stride.
-    deltas = None
-    pass
+
+    deltas = []
+
+    for i in range(len(locations)):
+        if sum(gt_boxes[i, :4]) == -4:
+            deltas.append([-1, -1, -1, -1])
+        else:
+            deltas.append([(locations[i, 0]-gt_boxes[i, 0])/stride, (locations[i, 1]-gt_boxes[i, 1])/stride, (gt_boxes[i, 2]-locations[i, 0])/stride, (gt_boxes[i, 3]-locations[i, 1])/stride])
+    
     ##########################################################################
     #                             END OF YOUR CODE                           #
     ##########################################################################
 
-    return deltas
+    return torch.FloatTensor(deltas)
 
 
 def fcos_apply_deltas_to_locations(
@@ -181,13 +188,18 @@ def fcos_apply_deltas_to_locations(
     # for our use-case because the feature center must lie INSIDE the final  #
     # box. Make sure to clip them to zero.                                   #
     ##########################################################################
-    output_boxes = None
+    output_boxes = []
+
+    deltas = torch.clip(deltas, min=0)
+
+    for i in range(len(locations)):
+        output_boxes.append([(locations[i][0]-deltas[i][0]*stride), (locations[i][1]-deltas[i][1]*stride), (deltas[i][2]*stride+locations[i][0]), (deltas[i][3]*stride+locations[i][1])])
 
     ##########################################################################
     #                             END OF YOUR CODE                           #
     ##########################################################################
 
-    return output_boxes
+    return torch.FloatTensor(output_boxes)
 
 
 def fcos_make_centerness_targets(deltas: torch.Tensor):
@@ -215,12 +227,20 @@ def fcos_make_centerness_targets(deltas: torch.Tensor):
     #   (max(left, right) * max(top, bottom))
     # )
     ##########################################################################
-    centerness = None
+    
+    centerness = []
+
+    for i in range(len(deltas)):
+        if sum(deltas[i]) == -4:
+            centerness.append(-1)
+        else:
+            centerness.append(torch.sqrt((min(deltas[i][0], deltas[i][2])*min(deltas[i][1], deltas[i][3]))/(max(deltas[i][0], deltas[i][2])*max(deltas[i][1], deltas[i][3]))))
+
     ##########################################################################
     #                             END OF YOUR CODE                           #
     ##########################################################################
 
-    return centerness
+    return torch.FloatTensor(centerness)
 
 def get_fpn_location_coords(
     shape_per_fpn_level: Dict[str, Tuple],
@@ -252,13 +272,20 @@ def get_fpn_location_coords(
     location_coords = {
         level_name: None for level_name, _ in shape_per_fpn_level.items()
     }
-
+    
     for level_name, feat_shape in shape_per_fpn_level.items():
         level_stride = strides_per_fpn_level[level_name]
         ##################################################################–####
         # TODO: Implement logic to get location co-ordinates below.          #
         ######################################################################
-        pass
+
+        res = []
+
+        for y in range(0, feat_shape[2]):
+            for x in range(0, feat_shape[3]):
+                res.append(((y+0.5)*level_stride, (x+0.5)*level_stride))
+
+        location_coords[level_name] = torch.FloatTensor(res).to(device)
         ######################################################################
         #                             END OF YOUR CODE                       #
         ######################################################################

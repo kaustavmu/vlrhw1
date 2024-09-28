@@ -53,7 +53,7 @@ submit the training loss curve plot in the PDF submission.
  With the default hyperparameters, this should
 take ~30 minutes to train. Use `tmux` to run the train.py script so you do not
 need to watch it constantly. At this point, you will need a GPU, so you
-should train this part on AWS. Please submit the trainig loss curve plot in your PDF submission.
+should train this part on AWS. Please submit the training loss curve plot in your PDF submission.
 
 9. Follow the instructions in `FCOS.inference` to implement inference. We have 
 implemented a function to run NMS for you. Test your inference implementation

@@ -29,6 +29,7 @@ class SimpleCNN(nn.Module):
     Model definition
     """
     def __init__(self, num_classes=10, inp_size=28, c_dim=1):
+        print(num_classes, inp_size, c_dim)
         super().__init__()
         self.num_classes = num_classes
         self.conv1 = nn.Conv2d(c_dim, 32, 5, padding=2)
@@ -37,14 +38,14 @@ class SimpleCNN(nn.Module):
         self.pool1 = nn.AvgPool2d(2, 2)
         self.pool2 = nn.AvgPool2d(2, 2)
 
-        # TODO set the correct dim here
-        self.flat_dim = None
+        self.flat_dim = 64*64*4
 
         # Sequential is another way of chaining the layers.
         self.fc1 = nn.Sequential(*get_fc(self.flat_dim, 128, 'none'))
         self.fc2 = nn.Sequential(*get_fc(128, num_classes, 'none'))
 
     def forward(self, x):
+
         """
         :param x: input image in shape of (N, C, H, W)
         :return: out: classification logits in shape of (N, Nc)
